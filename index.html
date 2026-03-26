@@ -264,7 +264,7 @@ function renderHoy() {
   const display = pendientes.sort((a,b) => (a.fechaObj || 0) - (b.fechaObj || 0));
 
   document.getElementById('metrics-hoy').innerHTML = `
-    <div class="metric blue"><div class="label">Recomendaciones para la jornada de hoy</div><div class="value">${display.length}</div></div>
+    <div class="metric blue"><div class="label">Nº Partidos Recomendados hoy</div><div class="value">${display.length}</div></div>
     <div class="metric gold"><div class="label">Estado</div><div class="value">Pendientes</div></div>
   `;
 
