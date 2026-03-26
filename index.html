@@ -317,9 +317,9 @@ function renderEstadisticas() {
   const pendientes = allData.filter(d => d.acierto === 'pendiente').length;
 
   document.getElementById('metrics-stats').innerHTML = `
-    <div class="metric"><div class="label">Total Resueltos</div><div class="value">${total}</div></div>
-    <div class="metric green"><div class="label">Aciertos</div><div class="value">${si}</div></div>
-    <div class="metric red"><div class="label">Fallos</div><div class="value">${no}</div></div>
+    <div class="metric"><div class="label">Total Partidos Recomendados</div><div class="value">${total}</div></div>
+    <div class="metric green"><div class="label">Recomendaciones Acertadas</div><div class="value">${si}</div></div>
+    <div class="metric red"><div class="label">Recomendaciones Falladas</div><div class="value">${no}</div></div>
     <div class="metric gold"><div class="label">Tasa de Éxito</div><div class="value">${tasa}%</div></div>
   `;
 
