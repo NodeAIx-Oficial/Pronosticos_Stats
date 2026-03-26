@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProStats Dashboard - Pronósticos Deportivos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161e;
+    --bg3: #1a1e29;
+    --border: rgba(255,255,255,0.07);
+    --accent: #3b82f6;
+    --accent2: #10b981;
+    --text: #f1f5f9;
+    --text2: #94a3b8;
+    --text3: #475569;
+    --green: #10b981;
+    --red: #ef4444;
+    --gold: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, #3b82f6, #10b981);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+  .logo span { font-size: 13px; color: var(--text2); margin-top: 1px; display: block; }
+  .header-right { display: flex; align-items: center; gap: 16px; }
+  .update-info { font-size: 12px; color: var(--text3); }
+  .update-info b { color: var(--text2); }
+  #update-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  #update-btn:hover { opacity: 0.85; }
+  #update-btn:disabled { opacity: 0.5; cursor: default; }
+  #status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* LAYOUT */
+  main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
+
+  /* TABS */
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 28px;
+    background: var(--bg2); padding: 4px; border-radius: 10px;
+    width: fit-content; border: 1px solid var(--border);
+  }
+  .tab {
+    padding: 8px 20px; border-radius: 7px; cursor: pointer;
+    font-size: 13px; font-weight: 600; color: var(--text2);
+    transition: all 0.2s; border: none; background: transparent;
+  }
+  .tab.active { background: var(--accent); color: white; }
+  .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* METRIC CARDS */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .metric .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+  .metric .value { font-size: 26px; font-weight: 700; line-height: 1; }
+  .metric .sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .metric.green .value { color: var(--green); }
+  .metric.red .value { color: var(--red); }
+  .metric.gold .value { color: var(--gold); }
+  .metric.blue .value { color: var(--accent); }
+
+  /* SECTION TITLE */
+  .section-title {
+    font-size: 13px; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 14px; margin-top: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* PRONOSTICOS DEL DIA */
+  .pronosticos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .prono-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .prono-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    border-radius: 3px 0 0 3px;
+  }
+  .prono-card .comp {
+    font-size: 11px; color: var(--accent); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px;
+  }
+  .prono-card .partido {
+    font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.3;
+  }
+  .prono-card .details {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  }
+  .badge {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+  }
+  .badge-prono { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .badge-cuota { background: rgba(245,158,11,0.15); color: var(--gold); }
+  .badge-hora { background: rgba(148,163,184,0.1); color: var(--text2); }
+  .badge-conf { background: rgba(16,185,129,0.15); color: var(--green); }
+
+  /* TABLA HISTORICO */
+  .table-wrapper {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; margin-bottom: 28px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
+  th { padding: 12px 14px; color: var(--text3); font-weight: 700; text-align: left;
+       text-transform: uppercase; font-size: 11px; letter-spacing: 0.8px; }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  td.partido-name { color: var(--text); font-weight: 600; }
+  .acierto-si { color: var(--green); font-weight: 700; }
+  .acierto-no { color: var(--red); font-weight: 700; }
+  .acierto-pendiente { color: var(--gold); font-weight: 600; }
+
+  /* CHARTS GRID */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
+  .chart-canvas-wrap { position: relative; width: 100%; }
+
+  /* LOADING / ERROR */
+  #loading-overlay {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 999; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading-overlay p { color: var(--text2); font-size: 14px; }
+  #error-msg {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    color: #fca5a5; padding: 16px 20px; border-radius: 10px;
+    margin-bottom: 20px; font-size: 14px; display: none;
+  }
+
+  /* LEGEND */
+  .chart-legend {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 12px; font-size: 12px; color: var(--text2);
+  }
+  .chart-legend span { display: flex; align-items: center; gap: 5px; }
+  .chart-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* FILTERS */
+  .filters {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .filter-select {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px; border-radius: 7px;
+    font-size: 13px; cursor: pointer; outline: none;
+  }
+  .filter-select:focus { border-color: var(--accent); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--text3); font-size: 14px;
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex; align-items: center; gap: 8px;
+    justify-content: flex-end; margin-top: 12px; font-size: 13px; color: var(--text2);
+  }
+  .pagination button {
+    background: var(--bg2); border: 1px solid var(--border);
+    color: var(--text); padding: 5px 12px; border-radius: 6px;
+    cursor: pointer; font-size: 12px;
+  }
+  .pagination button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pagination button:disabled { opacity: 0.4; cursor: default; }
+
+  @media (max-width: 768px) {
+    main { padding: 16px; }
+    header { padding: 14px 166px; }
+    .logo h1 { font-size: 15px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Cargando datos del sheet...</p>
+</div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚽</div>
+    <div>
+      <h1>Pro<span style="color:var(--accent)">Stats</span> Dashboard</h1>
+      <span>Análisis de tus pronósticos deportivos</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="update-info">
+      <span id="status-dot"></span>
+      Última actualización: <b id="last-update">—</b>
+    </div>
+    <button id="update-btn" onclick="loadData()">↻ Actualizar</button>
+  </div>
+</header>
+
+<main>
+  <div id="error-msg"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('hoy')">📅 Pronósticos de hoy</button>
+    <button class="tab" onclick="switchTab('historico')">📋 Historial</button>
+    <button class="tab" onclick="switchTab('estadisticas')">📊 Estadísticas</button>
+  </div>
+
+  <div id="tab-hoy" class="tab-content active">
+    <div class="metrics" id="metrics-hoy"></div>
+    <div class="section-title" id="hoy-title">Pronósticos del día</div>
+    <div class="pronosticos-grid" id="pronosticos-hoy"></div>
+  </div>
+
+  <div id="tab-historico" class="tab-content">
+    <div class="filters">
+      <select class="filter-select" id="filter-comp" onchange="renderHistorico()">
+        <option value="">Todas las ligas</option>
+      </select>
+      <select class="filter-select" id="filter-acierto" onchange="renderHistorico()">
+        <option value="">Todos los resultados</option>
+        <option value="si">Aciertos</option>
+        <option value="no">Fallos</option>
+        <option value="pendiente">Pendientes</option>
+      </select>
+      <select class="filter-select" id="filter-tipo" onchange="renderHistorico()">
+        <option value="">Todos los tipos</option>
+      </select>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Liga</th>
+            <th>Partido</th>
+            <th>Pronóstico</th>
+            <th>Cuota</th>
+            <th>Resultado</th>
+            <th>Acierto</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-historico"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <div id="tab-estadisticas" class="tab-content">
+    <div class="metrics" id="metrics-stats"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>% Aciertos por tipo de pronóstico</h3>
+        <div class="chart-legend" id="legend-tipo"></div>
+        <div class="chart-canvas-wrap" style="height:260px">
+          <canvas id="chart-tipo"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>% Aciertos por liga</h3>
+        <div class="chart-legend" id="legend-comp"></div>
+        <div class="chart-canvas-wrap" style="height:260px">
+          <canvas id="chart-comp"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Distribución de resultados</h3>
+        <div class="chart-legend" id="legend-dist"></div>
+        <div class="chart-canvas-wrap" style="height:220px">
+          <canvas id="chart-dist"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// --- CORRECCIÓN 1: TU URL CSV ---
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlifIeovPtcFbFQfHA_tFamKQQGlsMtoj7mTD1wNs38UAqgLl24tJh9mI3K7Uop5XxqYP22OcvpZsX/pub?output=csv';
+const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutos
+
+let allData = [];
+let chartInstances = {};
+let histPage = 1;
+const PAGE_SIZE = 20;
+
+// ---- UTILS PARSING CSV ----
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return [];
+  // Normalizamos cabeceras para quitar tildes y espacios
+  const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  return lines.slice(1).map(line => {
+    const vals = [];
+    let cur = '', inQ = false;
+    for (let c of line) {
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { vals.push(cur.trim()); cur = ''; }
+      else cur += c;
+    }
+    vals.push(cur.trim());
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = (vals[i] || '').replace(/"/g,'').trim(); });
+    return obj;
+  }).filter(r => Object.values(r).some(v => v));
+}
+
+function findCol(row, candidates) {
+  for (const c of candidates) {
+    if (row[c] !== undefined) return c;
+  }
+  return null;
+}
+
+// --- CORRECCIÓN 2: MAPEO CON TUS NOMBRES EXACTOS DE COLUMNAS ---
+function getColMap(rows) {
+  if (!rows.length) return {};
+  const sample = rows[0];
+  // sample ya tiene las cabeceras normalizadas (sin tildes)
+  return {
+    fecha:       findCol(sample, ['fecha']),
+    comp:        findCol(sample, ['liga']), // Buscamos 'liga'
+    partido:     findCol(sample, ['partido']),
+    prono:       findCol(sample, ['recomendacion']), // Buscamos 'recomendacion'
+    cuota:       findCol(sample, ['cuota']),
+    resultado:   findCol(sample, ['resultado']),
+    acierto:     findCol(sample, ['acierto']),
+    confianza:   findCol(sample, ['%']), // Buscamos '%' para confianza
+  };
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const s = str.replace(/\//g,'-').trim();
+  const d = new Date(s);
+  if (!isNaN(d)) return d;
+  const parts = s.split('-');
+  if (parts.length === 3) {
+    if (parts[0].length === 4) return new Date(parts[0], parts[1]-1, parts[2]);
+    return new Date(parts[2], parts[1]-1, parts[0]);
+  }
+  return null;
+}
+
+function isToday(date) {
+  if (!date) return false;
+  const hoy = new Date();
+  return date.getFullYear() === hoy.getFullYear() &&
+         date.getMonth() === hoy.getMonth() &&
+         date.getDate() === hoy.getDate();
+}
+
+function isFutureOrToday(date) {
+  if (!date) return false;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  return date >= hoy;
+}
+
+// --- CORRECCIÓN 3: DETECTAR EL CHECKBOX (TRUE/FALSE) ---
+function normalizeAcierto(val) {
+  if (!val) return 'pendiente';
+  const v = val.toLowerCase().trim();
+  // Incluimos 'true' para el checkbox marcado y 'false' para el no marcado
+  if (['si','sí','yes','1','true','correcto','ganado','acierto'].includes(v)) return 'si';
+  if (['no','0','false','incorrecto','fallado','fallo'].includes(v)) return 'no';
+  return 'pendiente'; // Vacío o cualquier otra cosa
+}
+
+function fmt(date) {
+  if (!date) return '—';
+  return date.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
+}
+
+// ---- LOAD DATA PRINCIPAL ----
+async function loadData() {
+  const btn = document.getElementById('update-btn');
+  btn.disabled = true; btn.textContent = '↻ Cargando...';
+
+  try {
+    const resp = await fetch(CSV_URL + '&_t=' + Date.now());
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (!rows.length) throw new Error('Sin datos');
+
+    const colMap = getColMap(rows);
+
+    allData = rows.map(r => {
+      const fechaStr = colMap.fecha ? r[colMap.fecha] : '';
+      const fechaObj = parseDate(fechaStr);
+      return {
+        fecha: fechaStr,
+        fechaObj,
+        comp: (colMap.comp ? r[colMap.comp] : '') || 'Sin Liga',
+        partido: (colMap.partido ? r[colMap.partido] : '—'),
+        prono: (colMap.prono ? r[colMap.prono] : '') || '—',
+        cuota: colMap.cuota ? r[colMap.cuota] : '—',
+        resultado: colMap.resultado ? r[colMap.resultado] : '—',
+        acierto: normalizeAcierto(colMap.acierto ? r[colMap.acierto] : ''),
+        // Normalizamos confianza: ej: "0,75" o "75%" a un número 75
+        confianza: colMap.confianza ? r[colMap.confianza].replace('%','').replace(',','.') : '',
+      };
+    });
+
+    document.getElementById('last-update').textContent = new Date().toLocaleTimeString('es-ES');
+    document.getElementById('loading-overlay').style.display = 'none';
+    document.getElementById('error-msg').style.display = 'none';
+
+    populateFilters();
+    renderHoy();
+    renderHistorico();
+    renderEstadisticas();
+
+  } catch(e) {
+    const em = document.getElementById('error-msg');
+    em.style.display = 'block';
+    em.textContent = 'Error al cargar datos. Verifica tu conexión o que el sheet esté publicado.';
+    console.error(e);
+    document.getElementById('loading-overlay').style.display = 'none';
+  }
+  btn.disabled = false; btn.textContent = '↻ Actualizar';
+}
+
+// ---- TAB SWITCH ----
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['hoy','historico','estadisticas'][i] === name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ---- TAB HOY ----
+function renderHoy() {
+  // Pronósticos pendientes (acierto == pendiente)
+  const pendientes = allData.filter(d => d.acierto === 'pendiente');
+  // Ordenar por fecha, más cercanos primero
+  const display = pendientes.sort((a,b) => (a.fechaObj || 0) - (b.fechaObj || 0));
+
+  const titulo = document.getElementById('hoy-title');
+  titulo.textContent = 'Próximos pronósticos pendientes';
+
+  // Métricas hoy - solo informativas
+  const rachaActual = calcRacha();
+
+  document.getElementById('metrics-hoy').innerHTML = `
+    <div class="metric blue"><div class="label">Pronósticos</div><div class="value">${display.length}</div><div class="sub">pendientes total</div></div>
+    <div class="metric gold"><div class="label">Racha actual</div><div class="value">${rachaActual.val}</div><div class="sub">${rachaActual.tipo}</div></div>
+  `;
+
+  const container = document.getElementById('pronosticos-hoy');
+  if (!display.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">✅</div>No hay pronósticos pendientes en este momento</div>';
+    return;
+  }
+
+  container.innerHTML = display.map(d => {
+    // Si la confianza es < 1 asumimos que es formato 0.75, si es > 1 formato 75
+    let confVal = parseFloat(d.confianza);
+    let confText = '';
+    if (!isNaN(confVal)) {
+      confText = confVal <= 1 ? Math.round(confVal * 100) : Math.round(confVal);
+    }
+    const confBadge = confText
+      ? `<span class="badge badge-conf">${confText}% conf.</span>`
+      : '';
+    const cuotaBadge = d.cuota && d.cuota !== '—'
+      ? `<span class="badge badge-cuota">@${d.cuota}</span>` : '';
+    return `
+      <div class="prono-card">
+        <div class="comp">${d.comp}</div>
+        <div class="partido">${d.partido}</div>
+        <div class="details">
+          <span class="badge badge-prono">${d.prono}</span>
+          ${cuotaBadge}
+          ${confBadge}
+          <span class="badge badge-hora">${fmt(d.fechaObj)}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function calcRacha() {
+  // Solo partidos con resultado definido, ordenados del más nuevo al más viejo
+  const hist = allData
+    .filter(d => d.acierto === 'si' || d.acierto === 'no')
+    .sort((a,b) => (b.fechaObj || 0) - (a.fechaObj || 0));
+  if (!hist.length) return { val: 0, tipo: 'sin datos' };
+  let count = 1, tipo = hist[0].acierto;
+  for (let i = 1; i < hist.length; i++) {
+    if (hist[i].acierto === tipo) count++;
+    else break;
+  }
+  return { val: count, tipo: tipo === 'si' ? 'aciertos seguidos' : 'fallos seguidos' };
+}
+
+// ---- TAB HISTORICO ----
+function populateFilters() {
+  const comps = [...new Set(allData.map(d => d.comp).filter(Boolean))].sort();
+  const tipos = [...new Set(allData.map(d => d.prono).filter(Boolean))].sort();
+  const selComp = document.getElementById('filter-comp');
+  const selTipo = document.getElementById('filter-tipo');
+  const prevComp = selComp.value, prevTipo = selTipo.value;
+  selComp.innerHTML = '<option value="">Todas las ligas</option>' +
+    comps.map(c => `<option value="${c}">${c}</option>`).join('');
+  selTipo.innerHTML = '<option value="">Todos los tipos</option>' +
+    tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+  if (prevComp) selComp.value = prevComp;
+  if (prevTipo) selTipo.value = prevTipo;
+}
+
+function renderHistorico() {
+  histPage = 1;
+  renderHistoricoPage();
+}
+
+function renderHistoricoPage() {
+  const fComp = document.getElementById('filter-comp').value;
+  const fAci = document.getElementById('filter-acierto').value;
+  const fTipo = document.getElementById('filter-tipo').value;
+
+  // Filtrar y ordenar (más recientes primero)
+  let filtered = allData.filter(d => {
+    if (fComp && d.comp !== fComp) return false;
+    if (fAci && d.acierto !== fAci) return false;
+    if (fTipo && d.prono !== fTipo) return false;
+    return true;
+  }).sort((a,b) => (b.fechaObj || 0) - (a.fechaObj || 0));
+
+  const total = filtered.length;
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const slice = filtered.slice((histPage-1)*PAGE_SIZE, histPage*PAGE_SIZE);
+
+  const tbody = document.getElementById('tabla-historico');
+  tbody.innerHTML = slice.map(d => {
+    const aClass = d.acierto === 'si' ? 'acierto-si' : d.acierto === 'no' ? 'acierto-no' : 'acierto-pendiente';
+    const aText = d.acierto === 'si' ? '✓ Sí' : d.acierto === 'no' ? '✗ No' : '⋯ Pendiente';
+    return `<tr>
+      <td>${fmt(d.fechaObj)}</td>
+      <td><span class="badge badge-prono">${d.comp}</span></td>
+      <td class="partido-name">${d.partido}</td>
+      <td>${d.prono}</td>
+      <td>${d.cuota !== '—' ? d.cuota : '—'}</td>
+      <td>${d.resultado}</td>
+      <td class="${aClass}">${aText}</td>
+    </tr>`;
+  }).join('');
+
+  if (!slice.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:32px">Sin resultados con los filtros actuales</td></tr>';
+  }
+
+  const pag = document.getElementById('pagination');
+  pag.innerHTML = `
+    <span>${total} registros</span>
+    <button onclick="histPage=Math.max(1,histPage-1);renderHistoricoPage()" ${histPage<=1?'disabled':''}>← Ant</button>
+    <span>${histPage} / ${pages||1}</span>
+    <button onclick="histPage=Math.min(${pages},histPage+1);renderHistoricoPage()" ${histPage>=pages?'disabled':''}>Sig →</button>
+  `;
+}
+
+// ---- TAB ESTADÍSTICAS ----
+function renderEstadisticas() {
+  // Solo tomamos histórico con resultado definido (si/no)
+  const historico = allData.filter(d => d.acierto === 'si' || d.acierto === 'no');
+  const total = historico.length;
+  const aciertos = historico.filter(d => d.acierto === 'si').length;
+  const fallos = historico.filter(d => d.acierto === 'no').length;
+  const pendientes = allData.filter(d => d.acierto === 'pendiente').length;
+
+  const totalJugados = aciertos + fallos;
+  const pct = totalJugados ? Math.round(aciertos / totalJugados * 100) : 0;
+
+  document.getElementById('metrics-stats').innerHTML = `
+    <div class="metric blue"><div class="label">Total histórico</div><div class="value">${total}</div><div class="sub">resueltos</div></div>
+    <div class="metric green"><div class="label">Aciertos</div><div class="value">${aciertos}</div><div class="sub">${pct}% de tasa</div></div>
+    <div class="metric red"><div class="label">Fallos</div><div class="value">${fallos}</div><div class="sub">${totalJugados ? 100-pct : 0}% de tasa</div></div>
+    <div class="metric gold"><div class="label">Pendientes</div><div class="value">${pendientes}</div><div class="sub">actuales</div></div>
+  `;
+
+  // Chart: por tipo de pronóstico
+  const byTipo = {};
+  historico.forEach(d => {
+    if (!d.prono || d.prono === '—') return;
+    if (!byTipo[d.prono]) byTipo[d.prono] = {si:0,no:0};
+    if (d.acierto === 'si') byTipo[d.prono].si++;
+    if (d.acierto === 'no') byTipo[d.prono].no++;
+  });
+  // Filtrar tipos con al menos una muestra
+  const tipoLabels = Object.keys(byTipo);
+  const tipoPct = tipoLabels.map(k => {
+    const t = byTipo[k].si + byTipo[k].no;
+    return t ? Math.round(byTipo[k].si / t * 100) : 0;
+  });
+  // Colores claros
+  const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#f97316','#ec4899'];
+  const bgColors = tipoLabels.map((_,i) => colors[i % colors.length]);
+
+  renderChart('chart-tipo', 'bar', tipoLabels, tipoPct, bgColors, '%', 'legend-tipo');
+
+  // Chart: por liga
+  const byComp = {};
+  historico.forEach(d => {
+    if (!d.comp) return;
+    if (!byComp[d.comp]) byComp[d.comp] = {si:0,no:0};
+    if (d.acierto === 'si') byComp[d.comp].si++;
+    if (d.acierto === 'no') byComp[d.comp].no++;
+  });
+  // Ligas con más de 2 partidos resueltos para no sesgar
+  const compLabels = Object.keys(byComp).filter(k => byComp[k].si + byComp[k].no >= 2);
+  const compPct = compLabels.map(k => {
+    const t = byComp[k].si + byComp[k].no;
+    return t ? Math.round(byComp[k].si / t * 100) : 0;
+  });
+  const compColors = compLabels.map((_,i) => colors[(i+2) % colors.length]);
+  renderChart('chart-comp', 'bar', compLabels, compPct, compColors, '%', 'legend-comp');
+
+  // Chart: distribución Doughnut
+  renderDist(aciertos, fallos);
+}
+
+// Helper genérico para gráficos de barras
+function renderChart(id, type, labels, data, bgColors, suffix, legendId) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); }
+  if (!labels.length) {
+    document.getElementById(id).parentElement.innerHTML = '<div class="empty-state">No hay datos suficientes</div>';
+    return;
+  }
+
+  if (legendId) {
+    document.getElementById(legendId).innerHTML = labels.map((l,i) =>
+      `<span><i style="background:${bgColors[i]}"></i>${l} (${data[i]}${suffix})</span>`
+    ).join('');
+  }
+
+  chartInstances[id] = new Chart(document.getElementById(id), {
+    type,
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: bgColors,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: { label: ctx => ` Tasa acierto: ${ctx.raw}${suffix}` }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#64748b', font: { size: 11 }, maxRotation: 40 }, grid: { display: false } },
+        y: { ticks: { color: '#64748b', font: { size: 11 }, callback: v => v + suffix }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 0, max: 100 }
+      }
+    }
+  });
+}
+
+// Gráfico Doughnut
+function renderDist(si, no) {
+  const id = 'chart-dist';
+  if (chartInstances[id]) chartInstances[id].destroy();
+  const total = si + no;
+  if (!total) {
+    document.getElementById(id).parentElement.innerHTML = '<div class="empty-state">No hay datos resueltos</div>';
+    return;
+  };
+
+  const pSi = Math.round(si/total*100);
+  const pNo = 100 - pSi;
+
+  document.getElementById('legend-dist').innerHTML = `
+    <span><i style="background:#10b981"></i>Aciertos (${pSi}%)</span>
+    <span><i style="background:#ef4444"></i>Fallos (${pNo}%)</span>
+  `;
+
+  chartInstances[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: {
+      labels: ['Aciertos','Fallos'],
+      datasets: [{ data: [si, no], backgroundColor: ['#10b981','#ef4444'], borderWidth: 0, cutout: '70%' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} (${ctx.label === 'Aciertos' ? pSi : pNo}%)` } }
+      }
+    }
+  });
+}
+
+// ---- INICIALIZACIÓN AUTOMÁTICA ----
+// Cargar datos al abrir
+loadData();
+// Recargar cada X tiempo
+setInterval(loadData, REFRESH_INTERVAL);
+</script>
+</body>
+</html>
