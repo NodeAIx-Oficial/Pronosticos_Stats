@@ -416,7 +416,7 @@ function renderEstadisticas() {
         },
         tooltip: {
           callbacks: {
-            label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${total ? Math.round((ctx.raw/total)*100) : 1}%)`
+            label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${total ? Math.round((ctx.raw/total)*100) : 0}%)`
           }
         }
       }
