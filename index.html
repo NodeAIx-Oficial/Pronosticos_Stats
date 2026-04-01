@@ -313,7 +313,7 @@ function renderEstadisticas() {
   const si = resueltos.filter(d => d.acierto === 'si').length;
   const no = resueltos.filter(d => d.acierto === 'no').length;
   const total = resueltos.length;
-  const tasa = total ? Math.round((si / total) * 100) : 0;
+  const tasa = total ? Math.round((si / total) * 100) : 1;
   const pendientes = allData.filter(d => d.acierto === 'pendiente').length;
 
   document.getElementById('metrics-stats').innerHTML = `
