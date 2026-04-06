@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bet_Data_Science</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<!-- html2canvas para generar PNG desde HTML -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root {
     --bg: #0d0f14; --bg2: #13161e; --bg3: #1a1e29;
@@ -15,29 +13,20 @@
     --green: #10b981; --red: #ef4444; --gold: #f59e0b;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; padding: 0; }
-  
-  /* HEADER */
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
   header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #3b82f6, #10b981); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
   .logo h1 { font-size: 18px; font-weight: 700; }
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-  
-  /* LAYOUT */
   main { padding: 28px 32px; max-width: 1400px; margin: 0 auto; }
   .section-title { font-size: 13px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; margin-top: 28px; display: flex; align-items: center; gap: 8px; }
   .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* TABS */
   .tabs { display: flex; gap: 4px; margin-bottom: 28px; background: var(--bg2); padding: 4px; border-radius: 10px; width: fit-content; border: 1px solid var(--border); }
   .tab { padding: 8px 20px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text2); transition: all 0.2s; border: none; background: transparent; }
   .tab.active { background: var(--accent); color: white; }
   .tab:hover:not(.active) { color: var(--text); background: var(--bg3); }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
-
-  /* METRIC CARDS */
   .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
   .metric { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
   .metric .label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
@@ -46,8 +35,6 @@
   .metric.red .value { color: var(--red); }
   .metric.gold .value { color: var(--gold); }
   .metric.blue .value { color: var(--accent); }
-
-  /* PRONOSTICOS DEL DIA */
   .pronosticos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; margin-bottom: 28px; }
   .prono-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; border-left: 4px solid var(--accent); }
   .prono-card .comp { font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
@@ -56,8 +43,6 @@
   .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
   .badge-prono { background: rgba(59,130,246,0.15); color: #60a5fa; }
   .badge-conf { background: rgba(16,185,129,0.15); color: var(--green); }
-
-  /* TABLA HISTORICO */
   .table-wrapper { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 28px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
@@ -66,221 +51,28 @@
   td.partido-name { color: var(--text); font-weight: 600; }
   .acierto-si { color: var(--green); font-weight: 700; }
   .acierto-no { color: var(--red); font-weight: 700; }
-
-  /* ESTADÍSTICAS CHARTS */
   .stats-layout { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 28px; justify-content: space-between; }
   .chart-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; }
   .chart-box h3 { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; }
   .chart-canvas-wrapper { flex: 1; min-height: 250px; }
-
-  /* LOADING */
   #loading-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 999; gap: 16px; }
   #error-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; padding: 16px 20px; border-radius: 10px; margin-bottom: 20px; font-size: 14px; display: none; }
-
-  /* =============================================
-     BOTÓN GENERAR TARJETAS
-  ============================================= */
-  .btn-generate {
-    background: linear-gradient(135deg, #1e3a5f, #2563eb);
-    color: white; border: none; padding: 9px 18px; border-radius: 7px;
-    cursor: pointer; font-size: 13px; font-weight: 700;
-    display: flex; align-items: center; gap: 7px;
-    transition: opacity 0.2s; white-space: nowrap;
-  }
-  .btn-generate:hover { opacity: 0.85; }
-  .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* =============================================
-     MODAL DE TARJETAS GENERADAS
-  ============================================= */
-  #cards-modal {
-    display: none; position: fixed; inset: 0; z-index: 500;
-    background: rgba(0,0,0,0.85); overflow-y: auto;
-    padding: 32px 20px;
-  }
-  #cards-modal.open { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-  .modal-header {
-    width: 100%; max-width: 900px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .modal-header h2 { font-size: 18px; font-weight: 700; color: white; }
-  .modal-close {
-    background: rgba(255,255,255,0.1); border: none; color: white;
-    width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
-    font-size: 18px; display: flex; align-items: center; justify-content: center;
-  }
-  .modal-close:hover { background: rgba(255,255,255,0.2); }
-  .cards-wrapper {
-    display: flex; flex-wrap: wrap; gap: 24px;
-    justify-content: center; width: 100%;
-  }
-  .card-item {
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-  }
-  .card-item img { border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
-  .card-actions { display: flex; gap: 8px; }
-  .btn-dl {
-    background: var(--green); color: white; border: none;
-    padding: 7px 14px; border-radius: 6px; cursor: pointer;
-    font-size: 12px; font-weight: 700;
-  }
-  .btn-dl:hover { opacity: 0.85; }
-  .btn-drive {
-    background: #4285F4; color: white; border: none;
-    padding: 7px 14px; border-radius: 6px; cursor: pointer;
-    font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px;
-  }
-  .btn-drive:hover { opacity: 0.85; }
-  .btn-drive:disabled { opacity: 0.5; cursor: not-allowed; }
-
-  /* =============================================
-     PLANTILLA DE TARJETA TELEGRAM
-     (renderizada fuera de pantalla para html2canvas)
-  ============================================= */
-  #offscreen-cards {
-    position: fixed; left: -9999px; top: 0;
-    pointer-events: none; visibility: hidden;
-  }
-
-  .tg-card {
-    width: 800px;
-    background: linear-gradient(160deg, #0d2050 0%, #0a1628 40%, #071020 100%);
-    padding: 0;
-    border-radius: 0;
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* Fondo con patrón sutil */
-  .tg-card::before {
-    content: '';
-    position: absolute; inset: 0;
-    background:
-      radial-gradient(ellipse at 80% 20%, rgba(37,99,235,0.18) 0%, transparent 55%),
-      radial-gradient(ellipse at 10% 80%, rgba(14,165,233,0.10) 0%, transparent 50%);
-    z-index: 0;
-  }
-
-  .tg-card-inner {
-    position: relative; z-index: 1;
-    padding: 44px 52px 40px;
-  }
-
-  /* Logo / título */
-  .tg-brand {
-    text-align: center; margin-bottom: 36px;
-    font-size: 28px; font-weight: 900; letter-spacing: 3px;
-    color: white; text-transform: uppercase;
-  }
-  .tg-brand span { color: #60a5fa; }
-
-  /* Badge de liga */
-  .tg-liga-badge {
-    display: inline-block; margin: 0 auto 28px;
-    background: linear-gradient(90deg, #1d4ed8, #2563eb);
-    color: white; font-size: 15px; font-weight: 800;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    padding: 9px 32px; border-radius: 40px;
-    text-align: center; width: 100%;
-    box-sizing: border-box;
-  }
-
-  /* VS row */
-  .tg-match-row {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; margin-bottom: 28px;
-  }
-  .tg-team {
-    flex: 1; background: white; border-radius: 14px;
-    padding: 14px 20px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .tg-team-logo {
-    width: 52px; height: 52px; border-radius: 50%;
-    background: #e2e8f0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; flex-shrink: 0;
-    overflow: hidden;
-  }
-  .tg-team-logo img { width: 100%; height: 100%; object-fit: contain; }
-  .tg-team-name {
-    font-size: 17px; font-weight: 900; color: #0f172a;
-    text-transform: uppercase; letter-spacing: 0.5px;
-    line-height: 1.2;
-  }
-  .tg-vs {
-    background: #1e3a6e; color: white;
-    width: 48px; height: 48px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px; font-weight: 900; flex-shrink: 0;
-  }
-
-  /* Mercado + info */
-  .tg-info-row {
-    display: grid; grid-template-columns: 1fr 1fr 1fr;
-    gap: 14px; margin-bottom: 20px;
-  }
-  .tg-info-box {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 12px; padding: 14px 12px;
-    text-align: center;
-  }
-  .tg-info-box .tg-ib-label {
-    font-size: 11px; color: #94a3b8; text-transform: uppercase;
-    letter-spacing: 1px; margin-bottom: 6px; font-weight: 700;
-  }
-  .tg-info-box .tg-ib-value {
-    font-size: 20px; font-weight: 900; color: white;
-  }
-  .tg-info-box.highlight .tg-ib-value { color: #34d399; }
-  .tg-info-box.blue .tg-ib-value { color: #60a5fa; }
-
-  /* Fecha */
-  .tg-fecha {
-    text-align: center; font-size: 13px; color: #64748b;
-    font-weight: 600; letter-spacing: 0.5px; margin-top: 4px;
-  }
-
-  /* Footer brand line */
-  .tg-footer {
-    margin-top: 28px; padding-top: 18px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    text-align: center; font-size: 12px; font-weight: 700;
-    color: #475569; letter-spacing: 2px; text-transform: uppercase;
-  }
-
-  /* DRIVE AUTH NOTICE */
-  #drive-notice {
-    background: rgba(66,133,244,0.12); border: 1px solid rgba(66,133,244,0.3);
-    color: #93c5fd; padding: 12px 18px; border-radius: 8px;
-    font-size: 13px; margin-bottom: 8px; width: 100%; max-width: 900px;
-    display: none;
-  }
 </style>
 </head>
 <body>
 
 <div id="loading-overlay"><p>Cargando datos...</p></div>
 
-<!-- Contenedor offscreen para renderizar tarjetas -->
-<div id="offscreen-cards"></div>
-
 <header>
   <div class="logo">
     <div class="logo-icon">⚽</div>
     <h1>Bet_<span style="color:var(--accent)">Data_</span>Science</h1>
   </div>
-  <div class="header-actions">
-    <button id="update-btn" style="background:var(--accent); color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;" onclick="loadData()">↻ Actualizar</button>
-    <button class="btn-generate" id="btn-gen" onclick="openCardsModal()">📲 Generar Tarjetas Telegram</button>
-  </div>
+  <button style="background:var(--accent); color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;" onclick="loadData()">↻ Actualizar</button>
 </header>
 
 <main>
   <div id="error-msg"></div>
-
   <div class="tabs">
     <button class="tab active" onclick="switchTab('hoy')">📅 Pronósticos</button>
     <button class="tab" onclick="switchTab('historico')">📋 Historial</button>
@@ -296,17 +88,7 @@
   <div id="tab-historico" class="tab-content">
     <div class="table-wrapper">
       <table>
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Liga</th>
-            <th>Partido</th>
-            <th>Pronóstico</th>
-            <th>%</th>
-            <th>Resultado</th>
-            <th>Acierto</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Fecha</th><th>Liga</th><th>Partido</th><th>Pronóstico</th><th>%</th><th>Resultado</th><th>Acierto</th></tr></thead>
         <tbody id="tabla-historico"></tbody>
       </table>
     </div>
@@ -314,18 +96,14 @@
 
   <div id="tab-estadisticas" class="tab-content">
     <div class="metrics" id="metrics-stats"></div>
-    
     <div class="stats-layout">
       <div class="chart-box" style="flex: 1 1 400px;">
         <h3>Tasa diaria (Aciertos y Fallos)</h3>
-        <div class="chart-canvas-wrapper">
-          <canvas id="chart-daily-cols"></canvas>
-        </div>
+        <div class="chart-canvas-wrapper"><canvas id="chart-daily-cols"></canvas></div>
       </div>
-      
       <div class="chart-box" style="flex: 0 0 320px; align-items: center;">
         <h3>Media Total</h3>
-        <div class="chart-canvas-wrapper" style="width: 100%; display: flex; align-items: center; justify-content: center;">
+        <div class="chart-canvas-wrapper" style="width:100%;display:flex;align-items:center;justify-content:center;">
           <canvas id="chart-main"></canvas>
         </div>
       </div>
@@ -333,103 +111,41 @@
   </div>
 </main>
 
-<!-- =============================================
-     MODAL TARJETAS
-============================================= -->
-<div id="cards-modal">
-  <div class="modal-header">
-    <h2>📲 Tarjetas para Telegram</h2>
-    <button class="modal-close" onclick="closeCardsModal()">✕</button>
-  </div>
-  <div id="drive-notice">
-    ℹ️ Para guardar en Drive necesitas conectar Google Drive (ver instrucciones abajo).
-  </div>
-  <div class="cards-wrapper" id="cards-wrapper">
-    <p style="color:#94a3b8; padding: 40px;">Generando tarjetas...</p>
-  </div>
-</div>
-
 <script>
-// --- TU URL CSV ---
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlifIeovPtcFbFQfHA_tFamKQQGlsMtoj7mTD1wNs38UAqgLl24tJh9mI3K7Uop5XxqYP22OcvpZsX/pub?output=csv';
+let allData = [], chartInstance = null, chartDailyCols = null;
 
-// --- GOOGLE DRIVE (opcional) ---
-// Si quieres guardar en Drive, introduce tu Client ID de Google Cloud Console aquí
-// Debes habilitar la API de Google Drive y Google Picker en tu proyecto
-const GOOGLE_CLIENT_ID = '708243288593-0a90m4u5sm0d3b744s64ftf3thrgsl3i.apps.googleusercontent.com'; // Ej: '123456789-abcde.apps.googleusercontent.com'
-const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
-let driveToken = null;
-
-let allData = [];
-let chartInstance = null;
-let chartDailyCols = null;
-let pendientesData = []; // Los partidos pendientes actuales
-
-// =============================================
-// CARGA DE DATOS
-// =============================================
 async function loadData() {
-  const btn = document.getElementById('update-btn');
-  btn.disabled = true; btn.textContent = '↻ Cargando...';
-
   try {
     const resp = await fetch(CSV_URL + '&_t=' + Date.now());
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const text = await resp.text();
     const rows = parseCSV(text);
     if (!rows.length) throw new Error('Sin datos');
-
-    const colMap = getColMap(rows[0]);
-
     allData = rows.map(r => {
-      const aciertoRaw = (r[colMap.acierto] || '').toLowerCase();
-      const resultado = r[colMap.resultado] || '';
+      const aciertoRaw = (r['acierto'] || '').toLowerCase();
+      const resultado = r['resultado'] || '';
       let aciertoEstado = 'pendiente';
-      
-      if (aciertoRaw === 'true' || aciertoRaw === 'si') {
-        aciertoEstado = 'si';
-      } else if (resultado.trim() !== '' && resultado.trim() !== '—') {
-        aciertoEstado = 'no';
-      }
-
+      if (aciertoRaw === 'true' || aciertoRaw === 'si') aciertoEstado = 'si';
+      else if (resultado.trim() !== '' && resultado.trim() !== '—') aciertoEstado = 'no';
       return {
-        fecha: r[colMap.fecha],
-        fechaObj: parseDate(r[colMap.fecha]),
-        liga: r[colMap.comp] || 'Liga',
-        local: r[colMap.local] || '',
-        visitante: r[colMap.visitante] || '',
-        partido: `${r[colMap.local]} vs ${r[colMap.visitante]}`,
-        prono: r[colMap.prono] || '—',
-        conf: r[colMap.conf] || '0%',
-        mercado: r[colMap.mercado] || 'Mercado Ganador',
-        resultado: resultado,
-        acierto: aciertoEstado
+        fecha: r['fecha'], fechaObj: parseDate(r['fecha']),
+        liga: r['liga'] || 'Liga', local: r['local'] || '', visitante: r['visitante'] || '',
+        partido: `${r['local']} vs ${r['visitante']}`,
+        prono: r['recomendacion'] || '—', conf: r['%'] || '0%',
+        mercado: r['mercado'] || '', resultado, acierto: aciertoEstado
       };
     });
-
     document.getElementById('loading-overlay').style.display = 'none';
     document.getElementById('error-msg').style.display = 'none';
-
-    pendientesData = allData.filter(d => d.acierto === 'pendiente')
-                           .sort((a,b) => (a.fechaObj || 0) - (b.fechaObj || 0));
-
-    renderHoy();
-    renderHistorico();
-    renderEstadisticas();
-
+    renderHoy(); renderHistorico(); renderEstadisticas();
   } catch(e) {
     const em = document.getElementById('error-msg');
-    em.style.display = 'block';
-    em.textContent = 'Error técnico: ' + e.message;
-    console.error(e);
+    em.style.display = 'block'; em.textContent = 'Error técnico: ' + e.message;
     document.getElementById('loading-overlay').style.display = 'none';
   }
-  btn.disabled = false; btn.textContent = '↻ Actualizar';
 }
 
-// =============================================
-// PARSING CSV
-// =============================================
 function parseCSV(text) {
   const lines = text.trim().split('\n');
   const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
@@ -440,60 +156,23 @@ function parseCSV(text) {
     return obj;
   });
 }
-
-function getColMap(sample) {
-  return {
-    fecha: 'fecha',
-    local: 'local',
-    visitante: 'visitante',
-    comp: 'liga',
-    prono: 'recomendacion',
-    conf: '%',
-    mercado: 'mercado',   // columna opcional — si no existe quedará vacía
-    resultado: 'resultado',
-    acierto: 'acierto'
-  };
-}
-
 function parseDate(str) {
   if (!str) return null;
-  const parts = str.split('/');
-  return new Date(parts[2], parts[1]-1, parts[0]);
+  const p = str.split('/');
+  return new Date(p[2], p[1]-1, p[0]);
 }
-function fmt(date) {
-  if (!date) return '—';
-  return date.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
-}
-
-// =============================================
-// TAB SWITCH
-// =============================================
 function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t,i) => {
-    t.classList.toggle('active', ['hoy','historico','estadisticas'][i] === name);
-  });
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['hoy','historico','estadisticas'][i] === name));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
 }
-
-// =============================================
-// TAB HOY
-// =============================================
 function renderHoy() {
-  const display = pendientesData;
-
+  const display = allData.filter(d => d.acierto === 'pendiente').sort((a,b) => (a.fechaObj||0)-(b.fechaObj||0));
   document.getElementById('metrics-hoy').innerHTML = `
     <div class="metric blue"><div class="label">Nº Partidos Recomendados hoy</div><div class="value">${display.length}</div></div>
-    <div class="metric gold"><div class="label">Estado</div><div class="value">Pendientes</div></div>
-  `;
-
-  const container = document.getElementById('pronosticos-hoy');
-  if (!display.length) {
-    container.innerHTML = '<p style="color:var(--text3); padding:20px;">No hay partidos pendientes para hoy.</p>';
-    return;
-  }
-
-  container.innerHTML = display.map(d => `
+    <div class="metric gold"><div class="label">Estado</div><div class="value">Pendientes</div></div>`;
+  const c = document.getElementById('pronosticos-hoy');
+  c.innerHTML = display.length ? display.map(d => `
     <div class="prono-card">
       <div class="comp">${d.liga}</div>
       <div class="partido">${d.partido}</div>
@@ -501,371 +180,33 @@ function renderHoy() {
         <span class="badge badge-prono">Recomendación: ${d.prono}</span>
         <span class="badge badge-conf">Probabilidad: ${d.conf}</span>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('') : '<p style="color:var(--text3);padding:20px;">No hay partidos pendientes.</p>';
 }
-
-// =============================================
-// TAB HISTÓRICO
-// =============================================
 function renderHistorico() {
-  const resueltos = allData.filter(d => d.acierto === 'si' || d.acierto === 'no');
-  const ordered = resueltos.sort((a,b) => (b.fechaObj || 0) - (a.fechaObj || 0));
-
-  const tbody = document.getElementById('tabla-historico');
-  tbody.innerHTML = ordered.map(d => `
-    <tr>
-      <td>${d.fecha}</td>
-      <td>${d.liga}</td>
-      <td class="partido-name">${d.partido}</td>
-      <td>${d.prono}</td>
-      <td>${d.conf}</td>
-      <td>${d.resultado}</td>
-      <td class="acierto-${d.acierto}">${d.acierto === 'si' ? '✓' : '✗'}</td>
-    </tr>
-  `).join('');
+  const ordered = allData.filter(d => d.acierto==='si'||d.acierto==='no').sort((a,b)=>(b.fechaObj||0)-(a.fechaObj||0));
+  document.getElementById('tabla-historico').innerHTML = ordered.map(d => `
+    <tr><td>${d.fecha}</td><td>${d.liga}</td><td class="partido-name">${d.partido}</td>
+    <td>${d.prono}</td><td>${d.conf}</td><td>${d.resultado}</td>
+    <td class="acierto-${d.acierto}">${d.acierto==='si'?'✓':'✗'}</td></tr>`).join('');
 }
-
-// =============================================
-// TAB ESTADÍSTICAS
-// =============================================
 function renderEstadisticas() {
-  const resueltos = allData.filter(d => d.acierto === 'si' || d.acierto === 'no');
-  const si = resueltos.filter(d => d.acierto === 'si').length;
-  const no = resueltos.filter(d => d.acierto === 'no').length;
-  const total = resueltos.length;
-  const tasa = total ? Math.round((si / total) * 100) : 0;
-
+  const resueltos = allData.filter(d => d.acierto==='si'||d.acierto==='no');
+  const si = resueltos.filter(d=>d.acierto==='si').length, no = resueltos.filter(d=>d.acierto==='no').length;
+  const total = resueltos.length, tasa = total ? Math.round((si/total)*100) : 0;
   document.getElementById('metrics-stats').innerHTML = `
-    <div class="metric"><div class="label">Total Partidos Recomendados</div><div class="value">${total}</div></div>
-    <div class="metric green"><div class="label">Recomendaciones Acertadas</div><div class="value">${si}</div></div>
-    <div class="metric red"><div class="label">Recomendaciones Falladas</div><div class="value">${no}</div></div>
-    <div class="metric gold"><div class="label">Tasa de Éxito</div><div class="value">${tasa}%</div></div>
-  `;
-
-  const dailyData = {};
-  resueltos.forEach(d => {
-    if (!dailyData[d.fecha]) dailyData[d.fecha] = { si: 0, no: 0 };
-    dailyData[d.fecha][d.acierto]++;
-  });
-
-  const dailyLabels = Object.keys(dailyData).sort((a, b) => parseDate(a) - parseDate(b));
-  const dailySi = dailyLabels.map(f => dailyData[f].si);
-  const dailyNo = dailyLabels.map(f => dailyData[f].no);
-
-  const ctxDaily = document.getElementById('chart-daily-cols').getContext('2d');
-  if (chartDailyCols) chartDailyCols.destroy();
-  chartDailyCols = new Chart(ctxDaily, {
-    type: 'bar',
-    data: {
-      labels: dailyLabels,
-      datasets: [
-        { label: 'Aciertos', data: dailySi, backgroundColor: '#10b981', borderRadius: 5 },
-        { label: 'Fallos',   data: dailyNo, backgroundColor: '#ef4444', borderRadius: 5 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12 } },
-        tooltip: { mode: 'index', intersect: false }
-      },
-      scales: {
-        x: { stacked: true, ticks: { color: '#94a3b8', font: { size: 9 }, maxRotation: 45 }, grid: { display: false } },
-        y: { stacked: true, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.03)' },
-             title: { display: true, text: 'Nº Partidos', color: '#94a3b8', font: { size: 11 } } }
-      }
-    }
-  });
-
+    <div class="metric"><div class="label">Total Recomendados</div><div class="value">${total}</div></div>
+    <div class="metric green"><div class="label">Acertadas</div><div class="value">${si}</div></div>
+    <div class="metric red"><div class="label">Falladas</div><div class="value">${no}</div></div>
+    <div class="metric gold"><div class="label">Tasa Éxito</div><div class="value">${tasa}%</div></div>`;
+  const dd = {}; resueltos.forEach(d => { if(!dd[d.fecha]) dd[d.fecha]={si:0,no:0}; dd[d.fecha][d.acierto]++; });
+  const labels = Object.keys(dd).sort((a,b)=>parseDate(a)-parseDate(b));
+  const ctxD = document.getElementById('chart-daily-cols').getContext('2d');
+  if(chartDailyCols) chartDailyCols.destroy();
+  chartDailyCols = new Chart(ctxD, { type:'bar', data:{ labels, datasets:[{label:'Aciertos',data:labels.map(f=>dd[f].si),backgroundColor:'#10b981',borderRadius:5},{label:'Fallos',data:labels.map(f=>dd[f].no),backgroundColor:'#ef4444',borderRadius:5}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:10},boxWidth:12}}},scales:{x:{stacked:true,ticks:{color:'#94a3b8',font:{size:9},maxRotation:45},grid:{display:false}},y:{stacked:true,ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(255,255,255,0.03)'}}}}});
   const ctx = document.getElementById('chart-main').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Aciertos', 'Fallos'],
-      datasets: [{ data: [si, no], backgroundColor: ['#10b981', '#ef4444'], borderWidth: 0, cutout: '70%' }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } },
-        tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw} (${total ? Math.round((ctx.raw/total)*100) : 0}%)` } }
-      }
-    }
-  });
+  if(chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, { type:'doughnut', data:{ labels:['Aciertos','Fallos'], datasets:[{data:[si,no],backgroundColor:['#10b981','#ef4444'],borderWidth:0,cutout:'70%'}]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#94a3b8',font:{size:11}}}}}});
 }
-
-// =============================================
-// ===============  TARJETAS  =================
-// =============================================
-
-/**
- * Construye el HTML de una tarjeta individual para un partido.
- * Formato inspirado en la imagen de Canva: fondo azul oscuro, 
- * badge de liga, row de equipos con logo placeholder, info boxes.
- */
-function buildCardHTML(d) {
-  // Iniciales de equipo como fallback visual
-  const initials = name => name.split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
-
-  // Detectar si hay hora en fecha (DD/MM/YYYY HH:MM) o solo fecha
-  let fechaStr = d.fecha || '';
-  let horaStr  = d.hora  || '';
-  if (!horaStr && fechaStr.includes(' ')) {
-    const parts = fechaStr.split(' ');
-    fechaStr = parts[0];
-    horaStr  = parts[1];
-  }
-
-  const fechaDisplay = fechaStr
-    ? (() => {
-        const p = fechaStr.split('/');
-        return p.length === 3 ? `${p[0]}-${p[1]}-${p[2]}` : fechaStr;
-      })()
-    : '';
-
-  const fechaLine = horaStr
-    ? `${fechaDisplay} — ${horaStr}`
-    : fechaDisplay;
-
-  // Determinar etiqueta de mercado
-  const mercadoLabel = d.mercado && d.mercado.trim() && d.mercado.trim() !== '—'
-    ? d.mercado.trim()
-    : 'Mercado Ganador';
-
-  return `
-  <div class="tg-card" style="width:800px;">
-    <div class="tg-card-inner">
-
-      <!-- Brand -->
-      <div class="tg-brand">BET_<span>DATA_</span>SCIENCE</div>
-
-      <!-- Liga -->
-      <div class="tg-liga-badge">${(d.liga || 'LIGA').toUpperCase()}</div>
-
-      <!-- VS row -->
-      <div class="tg-match-row">
-        <div class="tg-team">
-          <div class="tg-team-logo" style="background:#dbeafe; color:#1e40af; font-size:20px; font-weight:900;">
-            ${initials(d.local || 'L')}
-          </div>
-          <div class="tg-team-name">${(d.local || 'Local').toUpperCase()}</div>
-        </div>
-
-        <div class="tg-vs">VS</div>
-
-        <div class="tg-team" style="flex-direction: row-reverse; text-align: right;">
-          <div class="tg-team-logo" style="background:#dbeafe; color:#1e40af; font-size:20px; font-weight:900;">
-            ${initials(d.visitante || 'V')}
-          </div>
-          <div class="tg-team-name">${(d.visitante || 'Visitante').toUpperCase()}</div>
-        </div>
-      </div>
-
-      <!-- Mercado + Recomendación + Probabilidad -->
-      <div class="tg-info-row">
-        <div class="tg-info-box">
-          <div class="tg-ib-label">Mercado</div>
-          <div class="tg-ib-value" style="font-size:15px; line-height:1.3;">${mercadoLabel}</div>
-        </div>
-        <div class="tg-info-box blue">
-          <div class="tg-ib-label">Recomendación</div>
-          <div class="tg-ib-value">${d.prono || '—'}</div>
-        </div>
-        <div class="tg-info-box highlight">
-          <div class="tg-ib-label">Probabilidad</div>
-          <div class="tg-ib-value">${d.conf || '—'}</div>
-        </div>
-      </div>
-
-      <!-- Fecha -->
-      ${fechaLine ? `<div class="tg-fecha">📅 ${fechaLine}</div>` : ''}
-
-      <!-- Footer -->
-      <div class="tg-footer">@BET_DATA_SCIENCE</div>
-    </div>
-  </div>`;
-}
-
-/**
- * Renderiza un elemento DOM de tarjeta offscreen y lo convierte a PNG con html2canvas.
- * Devuelve una Promise<string> con el dataURL PNG.
- */
-async function cardToDataURL(cardHTML) {
-  const container = document.getElementById('offscreen-cards');
-  container.innerHTML = cardHTML;
-  const cardEl = container.firstElementChild;
-
-  // Aseguramos que tiene dimensiones antes de capturar
-  await new Promise(r => setTimeout(r, 80));
-
-  const canvas = await html2canvas(cardEl, {
-    scale: 2,          // alta resolución (1600px de ancho)
-    useCORS: true,
-    backgroundColor: null,
-    logging: false
-  });
-
-  container.innerHTML = '';
-  return canvas.toDataURL('image/png');
-}
-
-// =============================================
-// ABRIR MODAL Y GENERAR TARJETAS
-// =============================================
-async function openCardsModal() {
-  const modal = document.getElementById('cards-modal');
-  const wrapper = document.getElementById('cards-wrapper');
-  modal.classList.add('open');
-  wrapper.innerHTML = '<p style="color:#94a3b8; padding:40px; text-align:center;">⏳ Generando tarjetas…</p>';
-
-  if (!pendientesData.length) {
-    wrapper.innerHTML = '<p style="color:#94a3b8; padding:40px; text-align:center;">No hay partidos pendientes para generar tarjetas.</p>';
-    return;
-  }
-
-  // Generamos todas las tarjetas una a una
-  const items = [];
-  for (const d of pendientesData) {
-    const cardHTML = buildCardHTML(d);
-    const dataURL = await cardToDataURL(cardHTML);
-    const slug = `${(d.local||'local').replace(/\s+/g,'_')}_vs_${(d.visitante||'visit').replace(/\s+/g,'_')}`;
-    items.push({ d, dataURL, slug });
-  }
-
-  // Renderizar en modal
-  wrapper.innerHTML = items.map((item, i) => `
-    <div class="card-item" id="card-item-${i}">
-      <img src="${item.dataURL}" width="400" style="width:400px;" alt="Tarjeta ${item.slug}" />
-      <div class="card-actions">
-        <button class="btn-dl" onclick="downloadCard(${i})">⬇ Descargar PNG</button>
-        <button class="btn-drive" id="btn-drive-${i}" onclick="saveToDrive(${i})">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M6.28 3h11.44L22 11l-5.42 9H7.42L2 11zm3.47 0L5.19 11h13.62L14.25 3zm-2.5 8l4.75 8h4.5L7.25 11z"/></svg>
-          Guardar en Drive
-        </button>
-      </div>
-    </div>
-  `).join('');
-
-  // Almacenar dataURLs globalmente para usar en callbacks
-  window._generatedCards = items;
-
-  // Comprobar si Drive está configurado
-  if (!GOOGLE_CLIENT_ID) {
-    document.getElementById('drive-notice').style.display = 'block';
-    document.getElementById('drive-notice').innerHTML = `
-      ⚠️ Para activar "Guardar en Drive": añade tu <strong>Google Client ID</strong> en la variable 
-      <code>GOOGLE_CLIENT_ID</code> del script de este HTML. 
-      <a href="https://console.cloud.google.com/" target="_blank" style="color:#93c5fd;">Ir a Google Cloud Console →</a>
-    `;
-  }
-}
-
-function closeCardsModal() {
-  document.getElementById('cards-modal').classList.remove('open');
-  document.getElementById('drive-notice').style.display = 'none';
-}
-
-// =============================================
-// DESCARGAR PNG
-// =============================================
-function downloadCard(index) {
-  const item = window._generatedCards[index];
-  const a = document.createElement('a');
-  a.href = item.dataURL;
-  a.download = `BDS_${item.slug}.png`;
-  a.click();
-}
-
-// =============================================
-// GUARDAR EN GOOGLE DRIVE
-// =============================================
-
-/**
- * Autentica con Google usando OAuth2 implícito (token).
- * Requiere que GOOGLE_CLIENT_ID esté configurado.
- */
-function authenticateGoogle() {
-  return new Promise((resolve, reject) => {
-    if (driveToken) { resolve(driveToken); return; }
-    if (!GOOGLE_CLIENT_ID) { reject(new Error('GOOGLE_CLIENT_ID no configurado')); return; }
-
-    const w = 500, h = 600;
-    const left = (screen.width - w) / 2;
-    const top  = (screen.height - h) / 2;
-    const redirectUri = encodeURIComponent(window.location.href.split('?')[0]);
-    const scope = encodeURIComponent(GOOGLE_SCOPE);
-
-    const authURL = `https://accounts.google.com/o/oauth2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${redirectUri}&response_type=token&scope=${scope}&prompt=consent`;
-
-    const popup = window.open(authURL, 'google-auth', `width=${w},height=${h},left=${left},top=${top}`);
-
-    const interval = setInterval(() => {
-      try {
-        if (popup.closed) { clearInterval(interval); reject(new Error('Ventana cerrada')); return; }
-        const hash = popup.location.hash;
-        if (hash && hash.includes('access_token')) {
-          clearInterval(interval);
-          popup.close();
-          const params = new URLSearchParams(hash.substring(1));
-          driveToken = params.get('access_token');
-          resolve(driveToken);
-        }
-      } catch(e) { /* cross-origin, ignorar */ }
-    }, 300);
-  });
-}
-
-/**
- * Sube un PNG (dataURL) a Google Drive con multipart upload.
- */
-async function uploadToDrive(token, dataURL, filename) {
-  // Convertir dataURL a blob
-  const res = await fetch(dataURL);
-  const blob = await res.blob();
-
-  const metadata = { name: filename, mimeType: 'image/png' };
-
-  const form = new FormData();
-  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-  form.append('file', blob, filename);
-
-  const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` },
-    body: form
-  });
-
-  if (!resp.ok) {
-    const errBody = await resp.text();
-    throw new Error(`Drive API error ${resp.status}: ${errBody}`);
-  }
-  return await resp.json();
-}
-
-async function saveToDrive(index) {
-  const btn = document.getElementById(`btn-drive-${index}`);
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Subiendo…';
-
-  try {
-    const token = await authenticateGoogle();
-    const item = window._generatedCards[index];
-    const filename = `BDS_${item.slug}.png`;
-    const result = await uploadToDrive(token, item.dataURL, filename);
-    btn.innerHTML = '✅ Guardado';
-    btn.style.background = '#10b981';
-    console.log('Subido a Drive:', result);
-  } catch(e) {
-    btn.disabled = false;
-    btn.innerHTML = '❌ Error — Reintentar';
-    alert('Error al guardar en Drive:\n' + e.message + '\n\nRevisa que el Client ID esté configurado y que hayas autorizado el acceso.');
-    console.error(e);
-  }
-}
-
-// INIT
 loadData();
 </script>
 </body>
